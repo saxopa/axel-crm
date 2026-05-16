@@ -1,0 +1,81 @@
+-- ============================================================
+-- Configuration Auth Supabase — Axel La Main Verte CRM
+-- Objectif : un seul compte autorisé (Axel), 0 inscription publique
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- ÉTAPE 1 — Désactiver le sign-up public via le Dashboard
+-- ------------------------------------------------------------
+-- Chemin : Supabase Dashboard → Authentication → Providers → Email
+-- → Décocher "Enable sign-ups"
+-- → Sauvegarder
+--
+-- Effet : l'endpoint POST /auth/v1/signup retournera une erreur
+-- pour tout nouvel email. Seul un utilisateur créé manuellement
+-- (voir étape 2) pourra se connecter.
+
+-- ------------------------------------------------------------
+-- ÉTAPE 2 — Créer le compte d'Axel manuellement
+-- ------------------------------------------------------------
+-- Chemin : Supabase Dashboard → Authentication → Users → "Add user"
+-- → Email : <email d'Axel>
+-- → Password : générer un mot de passe fort (≥ 16 chars, mixte)
+-- → "Auto Confirm User" : OUI (sinon email de confirmation requis)
+--
+-- Alternative SQL (à exécuter UNE SEULE FOIS dans l'éditeur SQL) :
+--
+-- SELECT auth.create_user(
+--     email      := 'axel@example.com',   -- remplacer par le vrai email
+--     password   := 'Remplacer_par_MDP_fort_16chars!',
+--     email_confirm := true
+-- );
+
+-- ------------------------------------------------------------
+-- ÉTAPE 3 — Désactiver les méthodes d'auth non nécessaires
+-- ------------------------------------------------------------
+-- Chemin : Authentication → Providers
+-- → Désactiver : Phone, Google, GitHub, etc.
+-- → Garder uniquement : Email (magic link ou mot de passe selon préférence)
+--
+-- Recommandation : utiliser Email + Password (pas magic link)
+-- pour éviter la dépendance à une boîte mail accessible.
+
+-- ------------------------------------------------------------
+-- ÉTAPE 4 — Limiter la durée de session JWT
+-- ------------------------------------------------------------
+-- Chemin : Authentication → Settings → JWT expiry
+-- → Valeur recommandée : 3600 (1 heure)
+-- → Refresh token expiry : 604800 (7 jours)
+--
+-- UPDATE auth.config
+-- SET jwt_exp = 3600
+-- WHERE id = 1;
+-- (non disponible en SQL direct sur Supabase — passer par le dashboard)
+
+-- ------------------------------------------------------------
+-- ÉTAPE 5 — Activer la protection brute-force (rate limiting)
+-- ------------------------------------------------------------
+-- Activé par défaut sur Supabase cloud.
+-- Vérifier : Authentication → Settings → Rate limits
+-- → "Sign in attempts" : laisser à la valeur par défaut (30/heure)
+
+-- ------------------------------------------------------------
+-- ÉTAPE 6 — Vérifier qu'aucune clé service_role n'est exposée
+-- ------------------------------------------------------------
+-- La service_role key bypasse RLS entièrement.
+-- Elle NE DOIT JAMAIS apparaître dans :
+--   - config.js ou tout fichier JS côté frontend
+--   - un dépôt GitHub (même privé)
+-- Seule la clé anon (publique) va dans config.js.
+-- La service_role key reste dans les variables d'environnement
+-- serveur uniquement (si des fonctions Edge sont ajoutées plus tard).
+
+-- ------------------------------------------------------------
+-- Résumé des actions manuelles dashboard
+-- ------------------------------------------------------------
+-- [ ] Sign-ups désactivés (Authentication → Providers → Email)
+-- [ ] Compte Axel créé et confirmé
+-- [ ] Providers inutiles désactivés
+-- [ ] JWT expiry configuré à 3600s
+-- [ ] Rate limiting vérifié
+-- [ ] service_role key absente du code frontend

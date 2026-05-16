@@ -1,0 +1,11 @@
+/*
+  # GitHub Pages — En-têtes de sécurité HTTP
+  # Axel La Main Verte CRM
+  # Ce fichier s'applique à toutes les pages du site.
+
+  Content-Security-Policy: default-src 'self'; script-src 'self' cdn.jsdelivr.net 'unsafe-inline'; style-src 'self' fonts.googleapis.com cdn.jsdelivr.net 'unsafe-inline'; font-src 'self' fonts.gstatic.com; connect-src 'self' *.supabase.co; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+*/
