@@ -1,0 +1,39 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inject Supabase config
+        run: |
+          cat > js/config.js <<EOF
+          const SUPABASE_URL = '${{ secrets.SUPABASE_URL }}';
+          const SUPABASE_ANON_KEY = '${{ secrets.SUPABASE_ANON_KEY }}';
+          const SUPABASE_PUBLISHABLE_KEY = '${{ secrets.SUPABASE_PUBLISHABLE_KEY }}';
+          EOF
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      - uses: actions/deploy-pages@v4
+        id: deployment
