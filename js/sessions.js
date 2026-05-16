@@ -55,6 +55,8 @@ const Sessions = (() => {
                       </div>
                     </div>
                     ${s.notes ? `<p class="session-notes">${s.notes}</p>` : ''}
+                    ${s.intensity ? `<div class="intensity-display">${[1,2,3,4,5].map(i => `<span class="intensity-dot${i <= s.intensity ? ' filled' : ''}"></span>`).join('')}</div>` : ''}
+                    ${s.body_zones && s.body_zones.length ? `<div class="session-zones-badges">${s.body_zones.map(z => `<span class="zone-badge">${z}</span>`).join('')}</div>` : ''}
                     <div class="session-item-actions">
                       <button class="icon-btn" onclick="Router.navigate('sessions','edit','${s.id}')">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -138,6 +140,27 @@ const Sessions = (() => {
         </div>
 
         <div class="form-group">
+          <label class="form-label">Intensité</label>
+          <div class="intensity-picker" id="intensity-picker">
+            <input type="hidden" name="intensity" id="intensity-val" value="${s.intensity || ''}">
+            ${[1,2,3,4,5].map(n => `<button type="button" class="intensity-btn${s.intensity === n ? ' active' : ''}" data-val="${n}">${n}</button>`).join('')}
+          </div>
+          <small style="color:var(--text-3);font-size:.78rem;margin-top:4px;display:block">1 = très léger · 5 = très intense</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Zones travaillées</label>
+          <div class="body-zones-grid">
+            ${['Dos', 'Épaules', 'Nuque', 'Jambes', 'Pieds', 'Bras', 'Abdomen', 'Visage'].map(z => `
+              <label class="zone-checkbox">
+                <input type="checkbox" name="body_zones" value="${z}" ${(s.body_zones || []).includes(z) ? 'checked' : ''}>
+                <span>${z}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="form-group">
           <label class="form-label">Notes</label>
           <textarea class="form-input form-textarea" name="notes">${s.notes || ''}</textarea>
         </div>
@@ -157,11 +180,21 @@ const Sessions = (() => {
       if (!prixInput.value && opt.dataset.prix) prixInput.value = opt.dataset.prix;
     });
 
+    document.getElementById('intensity-picker').addEventListener('click', e => {
+      const btn = e.target.closest('.intensity-btn');
+      if (!btn) return;
+      document.querySelectorAll('.intensity-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('intensity-val').value = btn.dataset.val;
+    });
+
     document.getElementById('session-form').addEventListener('submit', async e => {
       e.preventDefault();
       const fd = new FormData(e.target);
+      const zones = [...e.target.querySelectorAll('[name=body_zones]:checked')].map(c => c.value);
       const payload = Object.fromEntries(fd.entries());
-      Object.keys(payload).forEach(k => { if (!payload[k]) payload[k] = null; });
+      Object.keys(payload).forEach(k => { if (k !== 'body_zones' && !payload[k]) payload[k] = null; });
+      payload.body_zones = zones.length > 0 ? zones : null;
 
       const btn = e.target.querySelector('[type=submit]');
       btn.disabled = true;

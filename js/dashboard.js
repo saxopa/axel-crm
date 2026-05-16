@@ -5,15 +5,19 @@ const Dashboard = (() => {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-    const [clientsRes, sessionsRes, lastClientRes] = await Promise.all([
+    const [clientsRes, sessionsRes, lastClientRes, caRes, pendingRes] = await Promise.all([
       db.from('clients').select('id', { count: 'exact', head: true }),
       db.from('sessions').select('id', { count: 'exact', head: true }).gte('session_date', firstDay),
       db.from('clients').select('first_name, last_name, created_at').order('created_at', { ascending: false }).limit(1),
+      db.from('sessions').select('price_charged').gte('session_date', firstDay),
+      db.from('clients').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     ]);
 
     const totalClients = clientsRes.count ?? 0;
     const sessionsMonth = sessionsRes.count ?? 0;
     const lastClient = lastClientRes.data?.[0];
+    const caMonth = (caRes.data || []).reduce((sum, s) => sum + (s.price_charged || 0), 0);
+    const pendingCount = pendingRes.count ?? 0;
 
     const monthName = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
@@ -52,9 +56,24 @@ const Dashboard = (() => {
           <div class="stat-value stat-value--sm">${lastClient ? lastClient.first_name + ' ' + lastClient.last_name : '—'}</div>
           <div class="stat-label">Dernier client</div>
         </div>
+
+        <div class="stat-card animate-in" style="animation-delay:.24s">
+          <div class="stat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div class="stat-value">${caMonth.toFixed(0)} <span style="font-size:1.2rem">€</span></div>
+          <div class="stat-label">CA — ${monthName}</div>
+        </div>
       </div>
 
-      <div class="dashboard-actions animate-in" style="animation-delay:.24s">
+      ${pendingCount > 0 ? `
+      <div class="pending-alert">
+        <span>🕐 <strong>${pendingCount} client${pendingCount > 1 ? 's' : ''}</strong> en attente de validation (formulaire public)</span>
+        <button class="btn btn--ghost btn--sm" onclick="Router.navigate('clients')">Voir les clients →</button>
+      </div>
+      ` : ''}
+
+      <div class="dashboard-actions animate-in" style="animation-delay:.32s">
         <h2 class="section-title">Actions rapides</h2>
         <div class="quick-actions">
           <button class="quick-action-btn" onclick="Router.navigate('sessions', 'new')">

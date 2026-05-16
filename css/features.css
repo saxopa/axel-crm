@@ -1,0 +1,134 @@
+/* ─── Stats ──────────────────────────────────────────────────── */
+.stats-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.revenue-chart-wrap {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.chart-title {
+  font-size: .82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-3);
+  margin-bottom: 20px;
+}
+.chart-svg { width: 100%; overflow: visible; display: block; }
+.chart-bar-label { font-size: 10px; fill: var(--text-3); font-family: var(--font-sans); }
+.chart-bar-value { font-size: 10px; fill: var(--text-2); font-weight: 600; font-family: var(--font-sans); }
+.massage-stats-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+.massage-stat-item { display: flex; align-items: center; gap: 12px; }
+.massage-stat-label { font-size: .85rem; color: var(--text-2); width: 170px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.massage-stat-bar-wrap { flex: 1; height: 7px; background: var(--green-mist); border-radius: 99px; overflow: hidden; }
+.massage-stat-bar { height: 100%; background: var(--green); border-radius: 99px; transition: width .5s cubic-bezier(.4,0,.2,1); }
+.massage-stat-value { font-size: .82rem; color: var(--text-3); width: 70px; text-align: right; flex-shrink: 0; }
+
+/* ─── Newsletter ────────────────────────────────────────────── */
+.newsletter-meta { font-size: .88rem; color: var(--text-3); margin-bottom: 20px; }
+.consent-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 99px;
+  font-size: .78rem; font-weight: 600;
+}
+.consent-badge--yes { background: #d1fae5; color: #065f46; }
+.consent-badge--no  { background: #f3f4f6; color: #6b7280; }
+.copy-email-btn { font-size: .78rem; padding: 4px 10px; }
+
+/* ─── Clients extensions ────────────────────────────────────── */
+.loyalty-wrap {
+  display: flex; gap: 24px; padding: 16px;
+  background: var(--green-mist); border-radius: var(--radius-sm);
+  margin-top: 8px;
+}
+.loyalty-stat { text-align: center; }
+.loyalty-stat-value { font-family: var(--font-serif); font-size: 1.8rem; font-weight: 600; color: var(--green); line-height: 1; }
+.loyalty-stat-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3); margin-top: 4px; }
+.pending-badge {
+  background: #fef3c7; color: #92400e;
+  padding: 2px 8px; border-radius: 99px;
+  font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+}
+.consent-form-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  background: var(--green-mist); border-radius: var(--radius-sm);
+  cursor: pointer; font-size: .88rem; color: var(--text-2);
+}
+.consent-form-row input[type=checkbox] {
+  width: 17px; height: 17px; accent-color: var(--green); cursor: pointer; flex-shrink: 0;
+}
+.pending-alert {
+  background: #fffbeb; border: 1px solid #fcd34d;
+  border-radius: var(--radius-sm); padding: 12px 16px;
+  font-size: .88rem; color: #92400e; margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+
+/* ─── Sessions extensions ───────────────────────────────────── */
+.body-zones-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px; margin-top: 8px;
+}
+.zone-checkbox {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer; font-size: .83rem; color: var(--text-2);
+  transition: all var(--transition);
+  user-select: none;
+}
+.zone-checkbox:has(input:checked) {
+  background: var(--green-mist); border-color: var(--green); color: var(--green-dk);
+}
+.zone-checkbox input { accent-color: var(--green); flex-shrink: 0; }
+.intensity-picker { display: flex; gap: 8px; margin-top: 8px; }
+.intensity-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 2px solid var(--border-2);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: .9rem; color: var(--text-3);
+  transition: all var(--transition); cursor: pointer; background: none;
+}
+.intensity-btn:hover { border-color: var(--green); color: var(--green); }
+.intensity-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+.session-zones-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.zone-badge {
+  background: var(--green-mist); color: var(--green-dk);
+  padding: 2px 8px; border-radius: 99px; font-size: .73rem; font-weight: 500;
+}
+.intensity-display { display: inline-flex; align-items: center; gap: 3px; margin-top: 4px; }
+.intensity-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-2); }
+.intensity-dot.filled { background: var(--gold); }
+
+/* ─── Public intake form ─────────────────────────────────────── */
+.intake-page {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: var(--cream); padding: 40px 20px;
+}
+.intake-card {
+  background: #fff; border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); padding: 48px 44px;
+  width: 100%; max-width: 540px;
+}
+.intake-brand { text-align: center; margin-bottom: 36px; }
+.intake-logo {
+  width: 56px; height: 56px; background: var(--green-mist);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+}
+.intake-title { font-family: var(--font-serif); font-size: 1.6rem; color: var(--green-dk); font-weight: 400; }
+.intake-title em { display: block; font-size: 1.1rem; color: var(--gold); }
+.intake-sub { color: var(--text-3); font-size: .88rem; margin-top: 8px; }
+.intake-success { text-align: center; padding: 48px 24px; }
+.intake-success-icon { font-size: 3rem; margin-bottom: 16px; }
+.intake-success-title { font-family: var(--font-serif); font-size: 1.4rem; color: var(--green-dk); margin-bottom: 8px; }
+.intake-success-sub { color: var(--text-3); font-size: .9rem; }

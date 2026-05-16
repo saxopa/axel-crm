@@ -48,6 +48,8 @@ const Router = (() => {
       case 'clients': await Clients.render(content, action, id); break;
       case 'massages': await Massages.render(content, action, id); break;
       case 'sessions': await Sessions.render(content, action, id); break;
+      case 'stats': await Stats.render(content); break;
+      case 'newsletter': await Newsletter.render(content); break;
       case 'login': renderLogin(content); break;
       default: navigate('dashboard');
     }

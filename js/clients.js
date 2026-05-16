@@ -35,10 +35,16 @@ const Clients = (() => {
           <span class="view-eyebrow">Gestion</span>
           <h1 class="view-title">Clients</h1>
         </div>
-        <button class="btn btn--primary" onclick="Router.navigate('clients','new')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Nouveau
-        </button>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <button class="btn btn--ghost" onclick="Clients.exportCSV()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exporter
+          </button>
+          <button class="btn btn--primary" onclick="Router.navigate('clients','new')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nouveau
+          </button>
+        </div>
       </div>
 
       <div class="toolbar">
@@ -66,7 +72,7 @@ const Clients = (() => {
                 <td>
                   <div class="client-name-cell">
                     <span class="client-avatar">${(c.first_name?.[0] || '').toUpperCase()}${(c.last_name?.[0] || '').toUpperCase()}</span>
-                    <span>${c.first_name} ${c.last_name}</span>
+                    <span>${c.first_name} ${c.last_name}${c.status === 'pending' ? ' <span class="pending-badge">En attente</span>' : ''}</span>
                   </div>
                 </td>
                 <td>${c.email || '—'}</td>
@@ -116,11 +122,17 @@ const Clients = (() => {
     const { data: c, error } = await db.from('clients').select('*').eq('id', id).single();
     if (error) { showError(container, error.message); return; }
 
-    const { data: sessions } = await db.from('sessions')
-      .select('*, massage_types(name)')
-      .eq('client_id', id)
-      .order('session_date', { ascending: false })
-      .limit(5);
+    const [{ data: sessions }, { data: sessData, count: sessCount }] = await Promise.all([
+      db.from('sessions')
+        .select('*, massage_types(name)')
+        .eq('client_id', id)
+        .order('session_date', { ascending: false })
+        .limit(5),
+      db.from('sessions')
+        .select('price_charged', { count: 'exact' })
+        .eq('client_id', id),
+    ]);
+    const totalRevenue = (sessData || []).reduce((sum, s) => sum + (s.price_charged || 0), 0);
 
     container.innerHTML = `
       <div class="view-header">
@@ -138,7 +150,26 @@ const Clients = (() => {
             ${c.email ? `<div class="detail-row"><dt>Email</dt><dd><a href="mailto:${c.email}">${c.email}</a></dd></div>` : ''}
             ${c.phone ? `<div class="detail-row"><dt>Téléphone</dt><dd>${c.phone}</dd></div>` : ''}
             ${c.date_of_birth ? `<div class="detail-row"><dt>Naissance</dt><dd>${new Date(c.date_of_birth).toLocaleDateString('fr-FR')}</dd></div>` : ''}
+            <div class="detail-row">
+              <dt>Newsletter</dt>
+              <dd>${c.email_consent ? '<span class="consent-badge consent-badge--yes">✓ Inscrit</span>' : '<span class="consent-badge consent-badge--no">Non inscrit</span>'}</dd>
+            </div>
+            ${c.status === 'pending' ? '<div class="detail-row"><dt>Statut</dt><dd><span class="pending-badge">En attente de validation</span></dd></div>' : ''}
           </dl>
+        </div>
+
+        <div class="detail-card">
+          <h3 class="detail-card-title">Fidélité</h3>
+          <div class="loyalty-wrap">
+            <div class="loyalty-stat">
+              <div class="loyalty-stat-value">${sessCount || 0}</div>
+              <div class="loyalty-stat-label">Sessions</div>
+            </div>
+            <div class="loyalty-stat">
+              <div class="loyalty-stat-value">${totalRevenue.toFixed(0)} €</div>
+              <div class="loyalty-stat-label">Total dépensé</div>
+            </div>
+          </div>
         </div>
 
         ${c.contraindications ? `
@@ -221,6 +252,13 @@ const Clients = (() => {
           <textarea class="form-input form-textarea" name="notes">${c.notes || ''}</textarea>
         </div>
 
+        <div class="form-group">
+          <label class="consent-form-row">
+            <input type="checkbox" name="email_consent" ${c.email_consent ? 'checked' : ''}>
+            <span>Accepte de recevoir des actualités par email (newsletter)</span>
+          </label>
+        </div>
+
         <div class="form-actions">
           <button type="button" class="btn btn--ghost" onclick="Router.navigate('clients')">Annuler</button>
           <button type="submit" class="btn btn--primary">${isEdit ? 'Enregistrer' : 'Créer'}</button>
@@ -231,8 +269,14 @@ const Clients = (() => {
     document.getElementById('client-form').addEventListener('submit', async e => {
       e.preventDefault();
       const fd = new FormData(e.target);
+      const emailConsentChecked = fd.has('email_consent');
       const payload = Object.fromEntries(fd.entries());
-      Object.keys(payload).forEach(k => { if (!payload[k]) payload[k] = null; });
+      delete payload['email_consent'];
+      payload.email_consent = emailConsentChecked;
+      payload.email_consent_date = emailConsentChecked
+        ? (c.email_consent_date || new Date().toISOString())
+        : null;
+      Object.keys(payload).forEach(k => { if (k !== 'email_consent' && k !== 'email_consent_date' && !payload[k]) payload[k] = null; });
 
       const btn = e.target.querySelector('[type=submit]');
       btn.disabled = true;
@@ -268,5 +312,29 @@ const Clients = (() => {
   function prevPage() { if (currentPage > 0) { currentPage--; Router.navigate('clients'); } }
   function nextPage() { currentPage++; Router.navigate('clients'); }
 
-  return { render, delete: deleteClient, prevPage, nextPage };
+  async function exportCSV() {
+    const { data, error } = await db.from('clients')
+      .select('first_name, last_name, email, phone, date_of_birth, email_consent, created_at')
+      .order('last_name');
+    if (error) { showToast('Erreur export', 'error'); return; }
+    const headers = ['Prénom', 'Nom', 'Email', 'Téléphone', 'Date de naissance', 'Newsletter', 'Inscrit le'];
+    const rows = (data || []).map(c => [
+      c.first_name || '',
+      c.last_name || '',
+      c.email || '',
+      c.phone || '',
+      c.date_of_birth || '',
+      c.email_consent ? 'Oui' : 'Non',
+      c.created_at ? new Date(c.created_at).toLocaleDateString('fr-FR') : ''
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'axel-clients.csv'; a.click();
+    URL.revokeObjectURL(url);
+    showToast('Export téléchargé');
+  }
+
+  return { render, delete: deleteClient, prevPage, nextPage, exportCSV };
 })();

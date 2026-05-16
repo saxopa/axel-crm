@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prise de contact — Axel la main verte</title>
+  <meta name="description" content="Formulaire de prise de contact avec Axel la main verte, consultant en bien-être et massothérapeute à Nantes.">
+  <meta name="theme-color" content="#2D6A4F">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/features.css">
+</head>
+<body style="display:block">
+
+  <div class="intake-page">
+    <div class="intake-card">
+
+      <!-- Brand header -->
+      <div class="intake-brand">
+        <div class="intake-logo">
+          <!-- Green circle with gold leaf drop shape — matches sidebar logo -->
+          <svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="20" r="16" fill="#2D6A4F"/>
+            <path d="M20 10a3 3 0 0 1 3 3c0 3-3 8-3 8s-3-5-3-8a3 3 0 0 1 3-3z" fill="#C9A84C"/>
+            <path d="M12 24c2-1.5 5-2.5 8-2.5s6 1 8 2.5" stroke="rgba(255,255,255,.75)" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h1 class="intake-title">Axel <em>la main verte</em></h1>
+        <p class="intake-sub">Remplissez ce formulaire pour prendre contact avec Axel.<br>Il vous répondra dans les plus brefs délais.</p>
+      </div>
+
+      <!-- Form -->
+      <form id="intake-form" novalidate>
+        <div class="form-grid form-grid--2">
+          <div class="form-group">
+            <label class="form-label" for="first_name">Prénom <span class="required">*</span></label>
+            <input class="form-input" type="text" id="first_name" name="first_name" placeholder="Marie" autocomplete="given-name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="last_name">Nom <span class="required">*</span></label>
+            <input class="form-input" type="text" id="last_name" name="last_name" placeholder="Dupont" autocomplete="family-name" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input class="form-input" type="email" id="email" name="email" placeholder="marie.dupont@email.fr" autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="phone">Téléphone</label>
+          <input class="form-input" type="tel" id="phone" name="phone" placeholder="06 12 34 56 78" autocomplete="tel">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="date_of_birth">Date de naissance</label>
+          <input class="form-input" type="date" id="date_of_birth" name="date_of_birth" autocomplete="bday">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="notes">Notes libres / motif de consultation</label>
+          <textarea class="form-input" id="notes" name="notes" rows="4" placeholder="Décrivez brièvement votre motif de consultation, douleurs éventuelles, questions…"></textarea>
+        </div>
+
+        <label class="consent-form-row" style="margin-top:8px;margin-bottom:12px">
+          <input type="checkbox" name="email_consent" required>
+          J'accepte que mes données soient conservées par Axel la main verte dans le cadre de ma prise en charge.&nbsp;<span class="required">*</span>
+        </label>
+
+        <p style="font-size:.78rem;color:var(--text-3);margin-bottom:20px;line-height:1.5">
+          Vos données sont conservées de manière sécurisée et ne sont pas partagées avec des tiers.
+          Conformément au RGPD, vous pouvez demander leur suppression à tout moment.
+        </p>
+
+        <div id="intake-error" class="login-error" style="display:none"></div>
+
+        <button class="btn btn--primary btn--full" type="submit">Envoyer ma demande</button>
+      </form>
+
+      <!-- Success state -->
+      <div id="intake-success" class="intake-success" style="display:none">
+        <div class="intake-success-icon">🌿</div>
+        <h2 class="intake-success-title">Merci !</h2>
+        <p class="intake-success-sub">Axel a bien reçu votre demande et vous contactera très prochainement.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script>
+    // Init Supabase with anon key — RLS policy allows anon INSERT with status='pending'
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.getElementById('intake-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const errEl = document.getElementById('intake-error');
+      errEl.style.display = 'none';
+
+      const fd = new FormData(e.target);
+      const btn = e.target.querySelector('[type=submit]');
+
+      // Basic validation
+      if (!fd.get('first_name') || !fd.get('last_name')) {
+        errEl.textContent = 'Veuillez renseigner votre prénom et votre nom.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Envoi en cours…';
+
+      const emailConsent = e.target.querySelector('[name=email_consent]').checked;
+
+      const payload = {
+        first_name:          fd.get('first_name')   || null,
+        last_name:           fd.get('last_name')    || null,
+        email:               fd.get('email')        || null,
+        phone:               fd.get('phone')        || null,
+        date_of_birth:       fd.get('date_of_birth') || null,
+        notes:               fd.get('notes')        || null,
+        email_consent:       emailConsent,
+        email_consent_date:  emailConsent ? new Date().toISOString() : null,
+        status:              'pending',
+      };
+
+      const { error } = await client.from('clients').insert(payload);
+
+      if (error) {
+        errEl.textContent = 'Une erreur est survenue. Veuillez réessayer ou contacter Axel directement.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Envoyer ma demande';
+      } else {
+        document.getElementById('intake-form').style.display = 'none';
+        document.getElementById('intake-success').style.display = 'block';
+      }
+    });
+  </script>
+
+</body>
+</html>
