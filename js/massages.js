@@ -8,7 +8,7 @@ const Massages = (() => {
 
   async function renderList(container) {
     container.innerHTML = `<div class="page-loader"><div class="spinner"></div></div>`;
-    const { data, error } = await db.from('massage_types').select('*').order('nom');
+    const { data, error } = await db.from('massage_types').select('*').order('name');
     if (error) { showError(container, error.message); return; }
 
     container.innerHTML = `
@@ -27,7 +27,7 @@ const Massages = (() => {
         ${data && data.length ? data.map(m => `
           <div class="massage-card">
             <div class="massage-card-header">
-              <h3 class="massage-card-title">${m.nom}</h3>
+              <h3 class="massage-card-title">${m.name}</h3>
               <div class="massage-card-actions">
                 <button class="icon-btn" onclick="Router.navigate('massages','edit','${m.id}')">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -38,8 +38,8 @@ const Massages = (() => {
               </div>
             </div>
             ${m.description ? `<p class="massage-card-desc">${m.description}</p>` : ''}
-            ${m.duree_defaut_minutes ? `<span class="massage-tag">${m.duree_defaut_minutes} min</span>` : ''}
-            ${m.prix ? `<span class="massage-tag massage-tag--gold">${m.prix} €</span>` : ''}
+            ${m.duration_minutes ? `<span class="massage-tag">${m.duration_minutes} min</span>` : ''}
+            ${m.price ? `<span class="massage-tag massage-tag--gold">${m.price} €</span>` : ''}
           </div>
         `).join('') : `
           <div class="empty-state empty-state--full">
@@ -71,7 +71,7 @@ const Massages = (() => {
       <form class="form-card animate-in" id="massage-form">
         <div class="form-group">
           <label class="form-label">Nom <span class="required">*</span></label>
-          <input class="form-input" name="nom" type="text" value="${m.nom || ''}" required>
+          <input class="form-input" name="name" type="text" value="${m.name || ''}" required>
         </div>
 
         <div class="form-group">
@@ -82,11 +82,11 @@ const Massages = (() => {
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Durée par défaut (min)</label>
-            <input class="form-input" name="duree_defaut_minutes" type="number" min="0" value="${m.duree_defaut_minutes || ''}">
+            <input class="form-input" name="duration_minutes" type="number" min="0" value="${m.duration_minutes || ''}">
           </div>
           <div class="form-group">
             <label class="form-label">Prix (€)</label>
-            <input class="form-input" name="prix" type="number" min="0" step="0.01" value="${m.prix || ''}">
+            <input class="form-input" name="price" type="number" min="0" step="0.01" value="${m.price || ''}">
           </div>
         </div>
 

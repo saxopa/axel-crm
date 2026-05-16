@@ -9,15 +9,15 @@ const Sessions = (() => {
   async function renderList(container) {
     container.innerHTML = `<div class="page-loader"><div class="spinner"></div></div>`;
     const { data, error } = await db.from('sessions')
-      .select('*, clients(prenom, nom), massage_types(nom)')
-      .order('date', { ascending: false })
+      .select('*, clients(first_name, last_name), massage_types(name)')
+      .order('session_date', { ascending: false })
       .limit(50);
 
     if (error) { showError(container, error.message); return; }
 
     const grouped = {};
     (data || []).forEach(s => {
-      const month = new Date(s.date).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+      const month = new Date(s.session_date).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
       if (!grouped[month]) grouped[month] = [];
       grouped[month].push(s);
     });
@@ -45,13 +45,13 @@ const Sessions = (() => {
                   <div class="session-timeline-card">
                     <div class="session-timeline-header">
                       <div>
-                        <strong class="session-client-name">${s.clients?.prenom || ''} ${s.clients?.nom || ''}</strong>
-                        <span class="session-type-badge">${s.massage_types?.nom || '—'}</span>
+                        <strong class="session-client-name">${s.clients?.first_name || ''} ${s.clients?.last_name || ''}</strong>
+                        <span class="session-type-badge">${s.massage_types?.name || '—'}</span>
                       </div>
                       <div class="session-meta">
-                        <span class="session-date-small">${new Date(s.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
-                        ${s.duree_minutes ? `<span class="session-duration">${s.duree_minutes} min</span>` : ''}
-                        ${s.prix ? `<span class="session-price">${s.prix} €</span>` : ''}
+                        <span class="session-date-small">${new Date(s.session_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                        ${s.duration_minutes ? `<span class="session-duration">${s.duration_minutes} min</span>` : ''}
+                        ${s.price_charged ? `<span class="session-price">${s.price_charged} €</span>` : ''}
                       </div>
                     </div>
                     ${s.notes ? `<p class="session-notes">${s.notes}</p>` : ''}
@@ -88,8 +88,8 @@ const Sessions = (() => {
     const isEdit = !!id;
 
     const [clientsRes, massagesRes] = await Promise.all([
-      db.from('clients').select('id, prenom, nom').order('nom'),
-      db.from('massage_types').select('id, nom, duree_defaut_minutes, prix').order('nom'),
+      db.from('clients').select('id, first_name, last_name').order('last_name'),
+      db.from('massage_types').select('id, name, duration_minutes, price').order('name'),
     ]);
 
     const clients = clientsRes.data || [];
@@ -109,7 +109,7 @@ const Sessions = (() => {
             <label class="form-label">Client <span class="required">*</span></label>
             <select class="form-input form-select" name="client_id" required>
               <option value="">Sélectionner…</option>
-              ${clients.map(c => `<option value="${c.id}" ${s.client_id === c.id ? 'selected' : ''}>${c.prenom} ${c.nom}</option>`).join('')}
+              ${clients.map(c => `<option value="${c.id}" ${s.client_id === c.id ? 'selected' : ''}>${c.first_name} ${c.last_name}</option>`).join('')}
             </select>
           </div>
 
@@ -117,23 +117,23 @@ const Sessions = (() => {
             <label class="form-label">Type de massage <span class="required">*</span></label>
             <select class="form-input form-select" name="massage_type_id" id="massage-type-select" required>
               <option value="">Sélectionner…</option>
-              ${massages.map(m => `<option value="${m.id}" data-duree="${m.duree_defaut_minutes || ''}" data-prix="${m.prix || ''}" ${s.massage_type_id === m.id ? 'selected' : ''}>${m.nom}</option>`).join('')}
+              ${massages.map(m => `<option value="${m.id}" data-duree="${m.duration_minutes || ''}" data-prix="${m.price || ''}" ${s.massage_type_id === m.id ? 'selected' : ''}>${m.name}</option>`).join('')}
             </select>
           </div>
 
           <div class="form-group">
             <label class="form-label">Date <span class="required">*</span></label>
-            <input class="form-input" name="date" type="date" value="${s.date ? s.date.slice(0,10) : new Date().toISOString().slice(0,10)}" required>
+            <input class="form-input" name="session_date" type="date" value="${s.session_date ? s.session_date.slice(0,10) : new Date().toISOString().slice(0,10)}" required>
           </div>
 
           <div class="form-group">
             <label class="form-label">Durée (min)</label>
-            <input class="form-input" name="duree_minutes" id="duree-input" type="number" min="0" value="${s.duree_minutes || ''}">
+            <input class="form-input" name="duration_minutes" id="duree-input" type="number" min="0" value="${s.duration_minutes || ''}">
           </div>
 
           <div class="form-group">
             <label class="form-label">Prix (€)</label>
-            <input class="form-input" name="prix" id="prix-input" type="number" min="0" step="0.01" value="${s.prix || ''}">
+            <input class="form-input" name="price_charged" id="prix-input" type="number" min="0" step="0.01" value="${s.price_charged || ''}">
           </div>
         </div>
 

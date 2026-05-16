@@ -20,11 +20,11 @@ const Clients = (() => {
   async function loadList(container) {
     let query = db.from('clients').select('*', { count: 'exact' });
     if (searchQuery) {
-      query = query.or(`prenom.ilike.%${searchQuery}%,nom.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
+      query = query.or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
     }
     const from = currentPage * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
-    const { data, count, error } = await query.order('nom').range(from, to);
+    const { data, count, error } = await query.order('last_name').range(from, to);
     if (error) { showError(container, error.message); return; }
 
     const totalPages = Math.ceil((count || 0) / PAGE_SIZE);
@@ -65,12 +65,12 @@ const Clients = (() => {
               <tr class="table-row" onclick="Router.navigate('clients','view','${c.id}')">
                 <td>
                   <div class="client-name-cell">
-                    <span class="client-avatar">${(c.prenom?.[0] || '').toUpperCase()}${(c.nom?.[0] || '').toUpperCase()}</span>
-                    <span>${c.prenom} ${c.nom}</span>
+                    <span class="client-avatar">${(c.first_name?.[0] || '').toUpperCase()}${(c.last_name?.[0] || '').toUpperCase()}</span>
+                    <span>${c.first_name} ${c.last_name}</span>
                   </div>
                 </td>
                 <td>${c.email || '—'}</td>
-                <td>${c.telephone || '—'}</td>
+                <td>${c.phone || '—'}</td>
                 <td class="table-actions" onclick="event.stopPropagation()">
                   <button class="icon-btn" title="Modifier" onclick="Router.navigate('clients','edit','${c.id}')">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -117,16 +117,16 @@ const Clients = (() => {
     if (error) { showError(container, error.message); return; }
 
     const { data: sessions } = await db.from('sessions')
-      .select('*, massage_types(nom)')
+      .select('*, massage_types(name)')
       .eq('client_id', id)
-      .order('date', { ascending: false })
+      .order('session_date', { ascending: false })
       .limit(5);
 
     container.innerHTML = `
       <div class="view-header">
         <div class="view-header-inner">
           <button class="back-btn" onclick="Router.navigate('clients')">← Clients</button>
-          <h1 class="view-title">${c.prenom} ${c.nom}</h1>
+          <h1 class="view-title">${c.first_name} ${c.last_name}</h1>
         </div>
         <button class="btn btn--primary" onclick="Router.navigate('clients','edit','${c.id}')">Modifier</button>
       </div>
@@ -136,15 +136,15 @@ const Clients = (() => {
           <h3 class="detail-card-title">Informations</h3>
           <dl class="detail-list">
             ${c.email ? `<div class="detail-row"><dt>Email</dt><dd><a href="mailto:${c.email}">${c.email}</a></dd></div>` : ''}
-            ${c.telephone ? `<div class="detail-row"><dt>Téléphone</dt><dd>${c.telephone}</dd></div>` : ''}
-            ${c.date_naissance ? `<div class="detail-row"><dt>Naissance</dt><dd>${new Date(c.date_naissance).toLocaleDateString('fr-FR')}</dd></div>` : ''}
+            ${c.phone ? `<div class="detail-row"><dt>Téléphone</dt><dd>${c.phone}</dd></div>` : ''}
+            ${c.date_of_birth ? `<div class="detail-row"><dt>Naissance</dt><dd>${new Date(c.date_of_birth).toLocaleDateString('fr-FR')}</dd></div>` : ''}
           </dl>
         </div>
 
-        ${c.contre_indications ? `
+        ${c.contraindications ? `
         <div class="detail-card detail-card--warning">
           <h3 class="detail-card-title">Contre-indications médicales</h3>
-          <p class="detail-text">${c.contre_indications}</p>
+          <p class="detail-text">${c.contraindications}</p>
         </div>` : ''}
 
         ${c.notes ? `
@@ -159,9 +159,9 @@ const Clients = (() => {
           <ul class="session-list">
             ${sessions.map(s => `
               <li class="session-item">
-                <span class="session-date">${new Date(s.date).toLocaleDateString('fr-FR')}</span>
-                <span class="session-type">${s.massage_types?.nom || '—'}</span>
-                ${s.duree_minutes ? `<span class="session-duration">${s.duree_minutes} min</span>` : ''}
+                <span class="session-date">${new Date(s.session_date).toLocaleDateString('fr-FR')}</span>
+                <span class="session-type">${s.massage_types?.name || '—'}</span>
+                ${s.duration_minutes ? `<span class="session-duration">${s.duration_minutes} min</span>` : ''}
               </li>
             `).join('')}
           </ul>` : '<p class="empty-text">Aucune session enregistrée</p>'}
@@ -191,11 +191,11 @@ const Clients = (() => {
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Prénom <span class="required">*</span></label>
-            <input class="form-input" name="prenom" type="text" value="${c.prenom || ''}" required>
+            <input class="form-input" name="first_name" type="text" value="${c.first_name || ''}" required>
           </div>
           <div class="form-group">
             <label class="form-label">Nom <span class="required">*</span></label>
-            <input class="form-input" name="nom" type="text" value="${c.nom || ''}" required>
+            <input class="form-input" name="last_name" type="text" value="${c.last_name || ''}" required>
           </div>
           <div class="form-group">
             <label class="form-label">Email</label>
@@ -203,17 +203,17 @@ const Clients = (() => {
           </div>
           <div class="form-group">
             <label class="form-label">Téléphone</label>
-            <input class="form-input" name="telephone" type="tel" value="${c.telephone || ''}">
+            <input class="form-input" name="phone" type="tel" value="${c.phone || ''}">
           </div>
           <div class="form-group">
             <label class="form-label">Date de naissance</label>
-            <input class="form-input" name="date_naissance" type="date" value="${c.date_naissance || ''}">
+            <input class="form-input" name="date_of_birth" type="date" value="${c.date_of_birth || ''}">
           </div>
         </div>
 
         <div class="form-group">
           <label class="form-label">Contre-indications médicales</label>
-          <textarea class="form-input form-textarea" name="contre_indications">${c.contre_indications || ''}</textarea>
+          <textarea class="form-input form-textarea" name="contraindications">${c.contraindications || ''}</textarea>
         </div>
 
         <div class="form-group">
